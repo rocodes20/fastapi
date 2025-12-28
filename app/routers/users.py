@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter,Depends
 from app.schemas.user import UserCreate,UserResponse
 
 router = APIRouter(
@@ -6,6 +6,8 @@ router = APIRouter(
     tags = ["Users"]
 )
 
+def get_source():
+    return "fastapi"
 
 @router.post("/",response_model = UserResponse)
 def create_user(user:UserCreate):
@@ -16,8 +18,9 @@ def create_user(user:UserCreate):
     }
 
 @router.get("/{user_id}")
-def get_user(user_id:int,role:str|None = None):
+def get_user(user_id:int,role:str|None = None,framework = Depends(get_source)):
     return {"user_id":user_id,
             "role":role,
-            "message":"success"}
+            "message":"success",
+            "framework":framework}
 
