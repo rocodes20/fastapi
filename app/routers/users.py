@@ -1,26 +1,29 @@
-from fastapi import APIRouter,Depends
-from app.schemas.user import UserCreate,UserResponse
+from fastapi import APIRouter,Depends,HTTPException
 
-router = APIRouter(
-    prefix = "/users",
-    tags = ["Users"]
-)
+from app.db.connection import get_db
+from app.schemas.user import UserCreate,UserResponse,UserPatch
+from app.services.user_service import create_user,get_user_by_id,patch_user
 
-def get_source():
-    return "fastapi"
+router = APIRouter()
 
-@router.post("/",response_model = UserResponse)
-def create_user(user:UserCreate):
-    return{
-        "name":user.name,
-        "email":user.email,
-        "password":user.password
-    }
+@router.post("/users",response_model=UserResponse)
+def create_user_route(user:UserCreate,db = Depends(get_db)):
+    return create_user(user,db)
 
-@router.get("/{user_id}")
-def get_user(user_id:int,role:str|None = None,framework = Depends(get_source)):
-    return {"user_id":user_id,
-            "role":role,
-            "message":"success",
-            "framework":framework}
+@router.get("users/{user_id}",response_model=UserResponse)
+def get_user_router(user_id:int,db = Depends(get_db)):
+    user = get_user_by_id(user_id,db)
+    if not user:
+        raise HTTPException(status_code=404,detail="user not found")
+    return user
 
+@router.patch("users/{user_id}",response_model=UserResponse)
+def patch_user_route(user_id:int,user:UserPatch,db = Depends(get_db)):
+    try: 
+        patch_user(user_id,user,db)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except RuntimeError:
+        raise HTTPException(status_code=500, detail="update failed")
