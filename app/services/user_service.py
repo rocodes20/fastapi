@@ -65,3 +65,12 @@ def patch_user(user_id,user_update,db):
         "id":user_id,
         **updates
     }
+
+def delete_user(user_id,db):
+    try:
+        with db.cursor() as cursor:
+            cursor.execute("DELETE FROM users where id = %s",(user_id,))
+            db.commit()
+    except pymysql.MySQLError:
+        db.rollback()
+        raise RuntimeError("DB error")

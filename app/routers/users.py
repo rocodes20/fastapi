@@ -2,7 +2,7 @@ from fastapi import APIRouter,Depends,HTTPException
 
 from app.db.connection import get_db
 from app.schemas.user import UserCreate,UserResponse,UserPatch
-from app.services.user_service import create_user,get_user_by_id,patch_user
+from app.services.user_service import create_user,get_user_by_id,patch_user,delete_user
 
 router = APIRouter()
 
@@ -27,3 +27,7 @@ def patch_user_route(user_id:int,user:UserPatch,db = Depends(get_db)):
         raise HTTPException(status_code=404, detail=str(e))
     except RuntimeError:
         raise HTTPException(status_code=500, detail="update failed")
+    
+@router.delete("/users/{user_id}")
+def delete_user_route(user_id,db= Depends(get_db)):
+    return delete_user(user_id,db)
