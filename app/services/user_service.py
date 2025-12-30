@@ -1,9 +1,11 @@
 import pymysql
 from app.schemas.user import UserPatch
+from app.core.security import hash_password
 def create_user(user,db):
     try:
+        hashed = hash_password(user.password)
         with db.cursor() as cursor:
-            cursor.execute("INSERT INTO users(name,email) VALUES (%s,%s)",(user.name,user.email))
+            cursor.execute("INSERT INTO users(name,email,password_hash) VALUES (%s,%s,%s)",(user.name,user.email,hashed))
             user_id = cursor.lastrowid
             db.commit()
             return {
